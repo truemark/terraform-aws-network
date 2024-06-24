@@ -335,7 +335,7 @@ resource "aws_vpc_endpoint" "this" {
 module "parameters" {
   count                        = var.create_parameters ? 1 : 0
   source                       = "truemark/network/aws//modules/parameters"
-  version                      = "0.0.2"
+  version                      = "~> 0.0"
   name                         = module.vpc.name
   vpc_id                       = coalesce(module.vpc.vpc_id,"force terraform to proceed without vpd id")
   azs                          = module.vpc.azs
