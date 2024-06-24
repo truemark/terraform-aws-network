@@ -277,6 +277,7 @@ module "nat_instance" {
   tags                             = merge(var.tags, {})
 }
 
+
 resource "aws_eip" "nat_instance_ip" {
   count             = local.nat_instance[var.nat_type] ? 1 : 0
   network_interface = module.nat_instance[0].eni_id
