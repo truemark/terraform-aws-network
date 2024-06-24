@@ -1,4 +1,11 @@
 locals {
+  should_create_public_ssm_parameter = var.create && length(var.public_subnet_ids) > 0
+  should_create_private_ssm_parameter = var.create && length(var.private_subnet_ids) > 0
+  should_create_intra_ssm_parameter = var.create && length(var.intra_subnet_ids) > 0
+  should_create_redshift_ssm_parameter = var.create && length(var.redshift_subnet_ids) > 0
+  should_create_database_ssm_parameter = var.create && length(var.database_subnet_ids) > 0
+  should_create_elasticache_ssm_parameter = var.create && length(var.elasticache_subnet_ids) > 0
+  should_create_outpost_ssm_parameter = var.create && length(var.outpost_subnet_ids) > 0
   component_tags = {
     "truemark:automation:component-id" : "network-parameters"
     "truemark:automation:component-url" : "https://registry.terraform.io/modules/truemark/network-parameters/aws/latest",
@@ -47,7 +54,7 @@ resource "aws_ssm_parameter" "azs" {
 }
 
 resource "aws_ssm_parameter" "public_subnets" {
-  count = var.create && var.public_subnet_ids != null ? 1 : 0
+  count = local.should_create_public_ssm_parameter ? 1 : 0
   name  = local.public_subnets_path
   type  = "StringList"
   value = join(",", var.public_subnet_ids)
@@ -55,7 +62,7 @@ resource "aws_ssm_parameter" "public_subnets" {
 }
 
 resource "aws_ssm_parameter" "private_subnets" {
-  count = var.create && var.private_subnet_ids != null ? 1 : 0
+  count = local.should_create_private_ssm_parameter ? 1 : 0
   name  = local.private_subnets_path
   type  = "StringList"
   value = join(",", var.private_subnet_ids)
@@ -63,7 +70,7 @@ resource "aws_ssm_parameter" "private_subnets" {
 }
 
 resource "aws_ssm_parameter" "intra_subnets" {
-  count = var.create && var.intra_subnet_ids != null ? 1 : 0
+  count = local.should_create_intra_ssm_parameter ? 1 : 0
   name  = local.intra_subnets_path
   type  = "StringList"
   value = join(",", var.intra_subnet_ids)
@@ -71,7 +78,7 @@ resource "aws_ssm_parameter" "intra_subnets" {
 }
 
 resource "aws_ssm_parameter" "redshift_subnets" {
-  count = var.create && var.redshift_subnet_ids != null ? 1 : 0
+  count = local.should_create_redshift_ssm_parameter ? 1 : 0
   name  = local.redshift_subnets_path
   type  = "StringList"
   value = join(",", var.redshift_subnet_ids)
@@ -79,7 +86,7 @@ resource "aws_ssm_parameter" "redshift_subnets" {
 }
 
 resource "aws_ssm_parameter" "database_subnets" {
-  count = var.create && var.database_subnet_ids != null ? 1 : 0
+  count = local.should_create_database_ssm_parameter ? 1 : 0
   name  = local.database_subnets_path
   type  = "StringList"
   value = join(",", var.database_subnet_ids)
@@ -87,7 +94,7 @@ resource "aws_ssm_parameter" "database_subnets" {
 }
 
 resource "aws_ssm_parameter" "elasticache_subnets" {
-  count = var.create && var.elasticache_subnet_ids != null ? 1 : 0
+  count = local.should_create_elasticache_ssm_parameter ? 1 : 0
   name  = local.elasticache_subnets_path
   type  = "StringList"
   value = join(",", var.elasticache_subnet_ids)
@@ -95,7 +102,7 @@ resource "aws_ssm_parameter" "elasticache_subnets" {
 }
 
 resource "aws_ssm_parameter" "outpost_subnets" {
-  count = var.create && var.outpost_subnet_ids != null ? 1 : 0
+  count = local.should_create_outpost_ssm_parameter ? 1 : 0
   name  = local.outpost_subnets_path
   type  = "StringList"
   value = join(",", var.outpost_subnet_ids)

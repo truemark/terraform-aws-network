@@ -18,49 +18,49 @@ variable "vpc_id" {
 variable "azs" {
   description = "Availability zones for this network. ex. [\"us-west-2a\", \"us-west-2b\"]"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "public_subnet_ids" {
   description = "Public subnet IDs in this network"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "private_subnet_ids" {
   description = "Private subnets IDs in this network"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "intra_subnet_ids" {
   description = "Intra subnet IDs in this network"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "redshift_subnet_ids" {
   description = "Redshift subnet IDs in this network"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "database_subnet_ids" {
   description = "Database subnet IDs in this network"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "elasticache_subnet_ids" {
   description = "Elasticache subnet IDs in this network"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "outpost_subnet_ids" {
   description = "Output subnet IDs in this network"
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "public_alb_arns" {

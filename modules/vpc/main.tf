@@ -264,9 +264,9 @@ module "vpc" {
 
 module "nat_instance" {
   count                       = local.nat_instance[var.nat_type] ? 1 : 0
-  source                      = "truemark/nat-instance/aws"
-  version                     = "3.0.1"
-  name                        = "main"
+  source                       = "truemark/network/aws//modules/nat-instance"
+  version                      = "~> 0.0"
+  name                        = "nat-instance"
   vpc_id                      = module.vpc.vpc_id
   public_subnet               = module.vpc.public_subnets[0]
   private_subnets_cidr_blocks = concat(module.vpc.private_subnets_cidr_blocks, module.vpc.database_subnets_cidr_blocks, module.vpc.elasticache_subnets_cidr_blocks, module.vpc.redshift_subnets_cidr_blocks)
@@ -334,11 +334,16 @@ resource "aws_vpc_endpoint" "this" {
 
 module "parameters" {
   count                        = var.create_parameters ? 1 : 0
-  source                       = "truemark/network-parameters/aws"
-  version                      = "1.1.6"
+  source                       = "truemark/network/aws//modules/parameters"
+  version                      = "~> 0.0"
   name                         = module.vpc.name
-  vpc_id                       = module.vpc.vpc_id
+  vpc_id                       = coalesce(module.vpc.vpc_id,"force terraform to proceed without vpd id")
   azs                          = module.vpc.azs
   public_subnet_ids            = module.vpc.public_subnets
   private_subnet_ids           = module.vpc.private_subnets
+  intra_subnet_ids             = module.vpc.intra_subnets
+  redshift_subnet_ids          = module.vpc.redshift_subnets
+  database_subnet_ids          = module.vpc.database_subnets
+  elasticache_subnet_ids       = module.vpc.elasticache_subnets
+  outpost_subnet_ids           = module.vpc.outpost_subnets
 }
