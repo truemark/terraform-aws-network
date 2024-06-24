@@ -207,6 +207,7 @@ module "vpc" {
   enable_nat_gateway                              = local.enable_nat_gateway[var.nat_type]
   single_nat_gateway                              = local.single_nat_gateway[var.nat_type]
   one_nat_gateway_per_az                          = local.one_nat_gateway_per_az[var.nat_type]
+  nat_gateway_destination_cidr_block              = var.nat_gateway_destination_cidr_block
   reuse_nat_ips                                   = true
   external_nat_ip_ids                             = aws_eip.nat_gateway_ips.*.id
   enable_ipv6                                     = var.enable_ipv6
