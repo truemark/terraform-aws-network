@@ -334,11 +334,16 @@ resource "aws_vpc_endpoint" "this" {
 
 module "parameters" {
   count                        = var.create_parameters ? 1 : 0
-  source                       = "truemark/network-parameters/aws"
-  version                      = "1.1.6"
+  source                       = "/Users/darenmcgill/work/modules/terraform-aws-network/modules/parameters"
+#   source                       = "truemark/network-parameters/aws"
+#   version                      = "1.1.6"
   name                         = module.vpc.name
-  vpc_id                       = module.vpc.vpc_id
+  vpc_id                       = coalesce(module.vpc.vpc_id,"force terraform to proceed without vpd id")
   azs                          = module.vpc.azs
   public_subnet_ids            = module.vpc.public_subnets
   private_subnet_ids           = module.vpc.private_subnets
+  intra_subnet_ids             = module.vpc.intra_subnets
+  redshift_subnet_ids          = module.vpc.redshift_subnets
+  database_subnet_ids          = module.vpc.database_subnets
+  elasticache_subnet_ids       = module.vpc.elasticache_subnets
 }
