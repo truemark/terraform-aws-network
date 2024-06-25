@@ -1,3 +1,8 @@
+variable "name" {
+  description = "This is the name for the vpc"
+  type        = string
+  default     = "services"
+}
 variable "network" {
   description = "This is the network address of the subnet you want to use"
   type        = string

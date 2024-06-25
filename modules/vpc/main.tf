@@ -195,7 +195,7 @@ resource "aws_eip" "nat_gateway_ips" {
 module "vpc" {
   source                                          = "terraform-aws-modules/vpc/aws"
   version                                         = "~> 5.0"
-  name                                            = "services"
+  name                                            = var.name
   cidr                                            = local.cidr_subnet
   azs                                             = slice(data.aws_availability_zones.available.names, 0, var.az_count)
   private_subnets                                 = [for num in range(local.privateno[var.private], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.private_network_override[var.network_override], num)]
