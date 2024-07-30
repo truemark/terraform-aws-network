@@ -232,6 +232,7 @@ module "vpc" {
   database_subnets                                = [for num in range(local.databaseno[var.database], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.database_network_override[var.network_override], num + local.database_netnum_override[var.network_override])]
   elasticache_subnets                             = [for num in range(local.elasticacheno[var.elasticache], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.elasticache_network_override[var.network_override], num + local.elasticache_netnum_override[var.network_override])]
   redshift_subnets                                = [for num in range(local.redshiftno[var.redshift], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.redshift_network_override[var.network_override], num + local.redshift_netnum_override[var.network_override])]
+  create_multiple_public_route_tables             = var.create_multiple_public_route_tables
   enable_nat_gateway                              = local.enable_nat_gateway[var.nat_type]
   single_nat_gateway                              = local.single_nat_gateway[var.nat_type]
   one_nat_gateway_per_az                          = local.one_nat_gateway_per_az[var.nat_type]

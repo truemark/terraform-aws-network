@@ -295,3 +295,9 @@ variable "nat_gateway_destination_cidr_block" {
   type        = string
   default     = "0.0.0.0/0"
 }
+
+variable "create_multiple_public_route_tables" {
+  description = "Indicates whether to create a separate route table for each public subnet. Default: `false`"
+  type        = bool
+  default     = false
+}
