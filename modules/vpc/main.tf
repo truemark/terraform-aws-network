@@ -278,7 +278,7 @@ module "vpc" {
   default_security_group_name                     = var.default_security_group_name
   default_security_group_ingress                  = var.default_security_group_ingress
   default_security_group_egress                   = var.default_security_group_egress
-  default_swecurity_group_tags                    = var.default_security_group_tags
+  default_security_group_tags                    = var.default_security_group_tags
   tags                                            = merge(local.tags, {})
   public_subnet_tags = merge(local.tags, local.publictags, {
     network = "public"
