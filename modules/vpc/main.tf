@@ -12,6 +12,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   #private subnet override
   private_network_override = {
@@ -70,6 +71,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   public_subnets = {
     "/16" = "49"
@@ -81,6 +83,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   intra_subnets = {
     "/16" = "52"
@@ -92,6 +95,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   database_subnets = {
     "/16" = "55"
@@ -103,6 +107,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   elasticache_subnets = {
     "/16" = "58"
@@ -114,6 +119,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   redshift_subnets = {
     "/16" = "61"
@@ -125,6 +131,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   ipv6_public_subnets = "3"
   ipv6_intra_subnets = "6"
@@ -267,7 +274,11 @@ module "vpc" {
   enable_dns_support                              = true
   manage_default_network_acl                      = true
   public_dedicated_network_acl                    = false
-  manage_default_security_group                   = false
+  manage_default_security_group                   = var.manage_default_security_group
+  default_security_group_name                     = var.default_security_group_name
+  default_security_group_ingress                  = var.default_security_group_ingress
+  default_security_group_egress                   = var.default_security_group_egress
+  default_swecurity_group_tags                    = var.default_security_group_tags
   tags                                            = merge(local.tags, {})
   public_subnet_tags = merge(local.tags, local.publictags, {
     network = "public"
