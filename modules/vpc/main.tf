@@ -12,6 +12,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   #private subnet override
   private_network_override = {
@@ -70,6 +71,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   public_subnets = {
     "/16" = "49"
@@ -81,6 +83,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   intra_subnets = {
     "/16" = "52"
@@ -92,6 +95,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   database_subnets = {
     "/16" = "55"
@@ -103,6 +107,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   elasticache_subnets = {
     "/16" = "58"
@@ -114,6 +119,7 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
   redshift_subnets = {
     "/16" = "61"
@@ -125,12 +131,13 @@ locals {
     "/22" = "6"
     "/23" = "5"
     "/24" = "4"
+    "/25" = "3"
   }
-  ipv6_public_subnets = "3"
-  ipv6_intra_subnets = "6"
-  ipv6_database_subnets = "9"
+  ipv6_public_subnets      = "3"
+  ipv6_intra_subnets       = "6"
+  ipv6_database_subnets    = "9"
   ipv6_elasticache_subnets = "12"
-  ipv6_redshift_subnets = "15"
+  ipv6_redshift_subnets    = "15"
   redshiftno = {
     false = var.az_count
     true  = 0
@@ -192,83 +199,113 @@ locals {
   })
   redshifttags = merge(var.redshifttags, {
   })
-  default_network_acl_ingress        = var.default_network_acl_ingress
-  default_network_acl_egress        = var.default_network_acl_egress
-  cidr_subnet = "${var.network}${var.subnet_cidr}"
+  default_network_acl_ingress = var.default_network_acl_ingress
+  default_network_acl_egress  = var.default_network_acl_egress
+  cidr_subnet                 = "${var.network}${var.subnet_cidr}"
   #   endpoints
 
   endpoint = {
     s3 = {
-      service          = "s3"
+      service         = "s3"
       service_type    = "Gateway"
       route_table_ids = flatten([module.vpc.private_route_table_ids, module.vpc.intra_route_table_ids])
-      tags             = { Name = "s3-vpc-endpoint" }
-      create           = var.s3
+      tags            = { Name = "s3-vpc-endpoint" }
+      create          = var.s3
     }
     dynamodb = {
-      service          = "dynamodb"
+      service         = "dynamodb"
       service_type    = "Gateway"
       route_table_ids = flatten([module.vpc.private_route_table_ids, module.vpc.intra_route_table_ids])
-      tags             = { Name = "dynamodb-vpc-endpoint" }
-      create           = var.dynamo
+      tags            = { Name = "dynamodb-vpc-endpoint" }
+      create          = var.dynamo
     }
   }
 }
 
 resource "aws_eip" "nat_gateway_ips" {
-  count = var.nat_type == "single_az" ? 1 : var.nat_type == "multi_az" ? var.az_count : 0
+  count  = var.nat_type == "single_az" ? 1 : var.nat_type == "multi_az" ? var.az_count : 0
   domain = "vpc"
 }
 
 module "vpc" {
-  source                                          = "terraform-aws-modules/vpc/aws"
-  version                                         = "~> 5.0"
-  name                                            = var.name
-  cidr                                            = local.cidr_subnet
-  azs                                             = slice(data.aws_availability_zones.available.names, 0, var.az_count)
-  private_subnets                                 = [for num in range(local.privateno[var.private], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.private_network_override[var.network_override], num)]
-  public_subnets                                  = [for num in range(local.publicno[var.public], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.public_network_override[var.network_override], num + local.public_netnum_override[var.network_override])]
-  intra_subnets                                   = [for num in range(local.intrano[var.intra], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.intra_network_override[var.network_override], num + local.intra_netnum_override[var.network_override])]
-  database_subnets                                = [for num in range(local.databaseno[var.database], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.database_network_override[var.network_override], num + local.database_netnum_override[var.network_override])]
-  elasticache_subnets                             = [for num in range(local.elasticacheno[var.elasticache], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.elasticache_network_override[var.network_override], num + local.elasticache_netnum_override[var.network_override])]
-  redshift_subnets                                = [for num in range(local.redshiftno[var.redshift], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.redshift_network_override[var.network_override], num + local.redshift_netnum_override[var.network_override])]
-  create_multiple_public_route_tables             = var.create_multiple_public_route_tables
-  enable_nat_gateway                              = local.enable_nat_gateway[var.nat_type]
-  single_nat_gateway                              = local.single_nat_gateway[var.nat_type]
-  one_nat_gateway_per_az                          = local.one_nat_gateway_per_az[var.nat_type]
-  nat_gateway_destination_cidr_block              = var.nat_gateway_destination_cidr_block
-  reuse_nat_ips                                   = true
-  external_nat_ip_ids                             = aws_eip.nat_gateway_ips.*.id
-  enable_ipv6                                     = var.enable_ipv6
-  database_subnet_assign_ipv6_address_on_creation = var.enable_ipv6
-  intra_subnet_assign_ipv6_address_on_creation    = var.enable_ipv6
-  public_subnet_assign_ipv6_address_on_creation   = var.enable_ipv6
-  private_subnet_assign_ipv6_address_on_creation  = var.enable_ipv6
-  elasticache_subnet_assign_ipv6_address_on_creation  = var.enable_ipv6
-  map_public_ip_on_launch                         = true
-  private_subnet_ipv6_prefixes                    = [for num in range(local.privateno[var.private], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : num]
-  public_subnet_ipv6_prefixes                     = [for num in range(local.publicno[var.public], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_public_subnets)]
-  intra_subnet_ipv6_prefixes                      = [for num in range(local.intrano[var.intra], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_intra_subnets)]
-  database_subnet_ipv6_prefixes                   = [for num in range(local.databaseno[var.database], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_database_subnets)]
-  elasticache_subnet_ipv6_prefixes                = [for num in range(local.elasticacheno[var.elasticache], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_elasticache_subnets)]
-  redshift_subnet_ipv6_prefixes                   = [for num in range(local.redshiftno[var.redshift], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_redshift_subnets)]
-  database_subnet_enable_dns64                    = var.dns64
-  intra_subnet_enable_dns64                       = var.dns64
-  private_subnet_enable_dns64                     = var.dns64
-  public_subnet_enable_dns64                      = var.dns64
-  elasticache_subnet_enable_dns64                 = var.dns64
-  redshift_subnet_enable_dns64                    = var.dns64
-  public_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
-  private_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
-  intra_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
-  database_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
+  source                                                            = "terraform-aws-modules/vpc/aws"
+  version                                                           = "~> 5.0"
+  name                                                              = var.name
+  cidr                                                              = local.cidr_subnet
+  azs                                                               = slice(data.aws_availability_zones.available.names, 0, var.az_count)
+  private_subnets                                                   = [for num in range(local.privateno[var.private], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.private_network_override[var.network_override], num)]
+  public_subnets                                                    = [for num in range(local.publicno[var.public], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.public_network_override[var.network_override], num + local.public_netnum_override[var.network_override])]
+  intra_subnets                                                     = [for num in range(local.intrano[var.intra], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.intra_network_override[var.network_override], num + local.intra_netnum_override[var.network_override])]
+  database_subnets                                                  = [for num in range(local.databaseno[var.database], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.database_network_override[var.network_override], num + local.database_netnum_override[var.network_override])]
+  elasticache_subnets                                               = [for num in range(local.elasticacheno[var.elasticache], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.elasticache_network_override[var.network_override], num + local.elasticache_netnum_override[var.network_override])]
+  redshift_subnets                                                  = [for num in range(local.redshiftno[var.redshift], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : cidrsubnet(local.cidr_subnet, local.redshift_network_override[var.network_override], num + local.redshift_netnum_override[var.network_override])]
+  create_multiple_public_route_tables                               = var.create_multiple_public_route_tables
+  enable_nat_gateway                                                = local.enable_nat_gateway[var.nat_type]
+  single_nat_gateway                                                = local.single_nat_gateway[var.nat_type]
+  one_nat_gateway_per_az                                            = local.one_nat_gateway_per_az[var.nat_type]
+  nat_gateway_destination_cidr_block                                = var.nat_gateway_destination_cidr_block
+  reuse_nat_ips                                                     = true
+  external_nat_ip_ids                                               = aws_eip.nat_gateway_ips.*.id
+  enable_ipv6                                                       = var.enable_ipv6
+  database_subnet_assign_ipv6_address_on_creation                   = var.enable_ipv6
+  intra_subnet_assign_ipv6_address_on_creation                      = var.enable_ipv6
+  public_subnet_assign_ipv6_address_on_creation                     = var.enable_ipv6
+  private_subnet_assign_ipv6_address_on_creation                    = var.enable_ipv6
+  elasticache_subnet_assign_ipv6_address_on_creation                = var.enable_ipv6
+  map_public_ip_on_launch                                           = true
+  private_subnet_ipv6_prefixes                                      = [for num in range(local.privateno[var.private], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : num]
+  public_subnet_ipv6_prefixes                                       = [for num in range(local.publicno[var.public], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_public_subnets)]
+  intra_subnet_ipv6_prefixes                                        = [for num in range(local.intrano[var.intra], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_intra_subnets)]
+  database_subnet_ipv6_prefixes                                     = [for num in range(local.databaseno[var.database], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_database_subnets)]
+  elasticache_subnet_ipv6_prefixes                                  = [for num in range(local.elasticacheno[var.elasticache], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_elasticache_subnets)]
+  redshift_subnet_ipv6_prefixes                                     = [for num in range(local.redshiftno[var.redshift], length(slice(data.aws_availability_zones.available.names, 0, var.az_count))) : (num + local.ipv6_redshift_subnets)]
+  database_subnet_enable_dns64                                      = var.dns64
+  intra_subnet_enable_dns64                                         = var.dns64
+  private_subnet_enable_dns64                                       = var.dns64
+  public_subnet_enable_dns64                                        = var.dns64
+  elasticache_subnet_enable_dns64                                   = var.dns64
+  redshift_subnet_enable_dns64                                      = var.dns64
+  public_subnet_enable_resource_name_dns_aaaa_record_on_launch      = false
+  private_subnet_enable_resource_name_dns_aaaa_record_on_launch     = false
+  intra_subnet_enable_resource_name_dns_aaaa_record_on_launch       = false
+  database_subnet_enable_resource_name_dns_aaaa_record_on_launch    = false
   elasticache_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
-  enable_dns_hostnames                            = true
-  enable_dns_support                              = true
-  manage_default_network_acl                      = true
-  public_dedicated_network_acl                    = false
-  manage_default_security_group                   = false
-  tags                                            = merge(local.tags, {})
+  enable_dns_hostnames                                              = true
+  enable_dns_support                                                = true
+  manage_default_network_acl                                        = true
+  public_dedicated_network_acl                                      = false
+  manage_default_security_group                                     = var.manage_default_security_group
+  default_security_group_name                                       = var.default_security_group_name
+  default_security_group_ingress                                    = var.default_security_group_ingress
+  default_security_group_egress                                     = var.default_security_group_egress
+  default_security_group_tags                                       = var.default_security_group_tags
+  enable_flow_log                                                   = var.enable_flow_log
+  vpc_flow_log_iam_role_name                                        = var.vpc_flow_log_iam_role_name
+  vpc_flow_log_iam_role_use_name_prefix                             = var.vpc_flow_log_iam_role_use_name_prefix
+  vpc_flow_log_permissions_boundary                                 = var.vpc_flow_log_permissions_boundary
+  vpc_flow_log_iam_policy_name                                      = var.vpc_flow_log_iam_policy_name
+  vpc_flow_log_iam_policy_use_name_prefix                           = var.vpc_flow_log_iam_policy_use_name_prefix
+  flow_log_max_aggregation_interval                                 = var.flow_log_max_aggregation_interval
+  flow_log_traffic_type                                             = var.flow_log_traffic_type
+  flow_log_destination_type                                         = var.flow_log_destination_type
+  flow_log_log_format                                               = var.flow_log_log_format
+  flow_log_destination_arn                                          = var.flow_log_destination_arn
+  flow_log_deliver_cross_account_role                               = var.flow_log_deliver_cross_account_role
+  flow_log_file_format                                              = var.flow_log_file_format
+  flow_log_hive_compatible_partitions                               = var.flow_log_hive_compatible_partitions
+  flow_log_per_hour_partition                                       = var.flow_log_per_hour_partition
+  vpc_flow_log_tags                                                 = var.vpc_flow_log_tags
+  create_flow_log_cloudwatch_log_group                              = var.create_flow_log_cloudwatch_log_group
+  create_flow_log_cloudwatch_iam_role                               = var.create_flow_log_cloudwatch_iam_role
+  flow_log_cloudwatch_iam_role_conditions                           = var.flow_log_cloudwatch_iam_role_conditions
+  flow_log_cloudwatch_iam_role_arn                                  = var.flow_log_cloudwatch_iam_role_arn
+  flow_log_cloudwatch_log_group_name_prefix                         = var.flow_log_cloudwatch_log_group_name_prefix
+  flow_log_cloudwatch_log_group_name_suffix                         = var.flow_log_cloudwatch_log_group_name_suffix
+  flow_log_cloudwatch_log_group_retention_in_days                   = var.flow_log_cloudwatch_log_group_retention_in_days
+  flow_log_cloudwatch_log_group_kms_key_id                          = var.flow_log_cloudwatch_log_group_kms_key_id
+  flow_log_cloudwatch_log_group_skip_destroy                        = var.flow_log_cloudwatch_log_group_skip_destroy
+  flow_log_cloudwatch_log_group_class                               = var.flow_log_cloudwatch_log_group_class
+  tags                                                              = merge(local.tags, {})
   public_subnet_tags = merge(local.tags, local.publictags, {
     network = "public"
   })
@@ -288,13 +325,13 @@ module "vpc" {
     "network" = "redshift"
   })
   default_network_acl_ingress = local.default_network_acl_ingress
-  default_network_acl_egress = local.default_network_acl_egress
+  default_network_acl_egress  = local.default_network_acl_egress
 }
 
 module "nat_instance" {
   count                       = local.nat_instance[var.nat_type] ? 1 : 0
-  source                       = "truemark/network/aws//modules/nat-instance"
-  version                      = "~> 0.0"
+  source                      = "truemark/network/aws//modules/nat-instance"
+  version                     = "~> 0.0"
   name                        = "nat-instance"
   vpc_id                      = module.vpc.vpc_id
   public_subnet               = module.vpc.public_subnets[0]
@@ -303,13 +340,13 @@ module "nat_instance" {
   architecture                = var.architecture
   instance_types              = var.instance_types
   use_spot_instance           = var.use_spot_instance
-  tags                             = merge(var.tags, {})
+  tags                        = merge(var.tags, {})
 }
 
 resource "aws_eip" "nat_instance_ip" {
   count             = local.nat_instance[var.nat_type] ? 1 : 0
   network_interface = module.nat_instance[0].eni_id
-  tags = merge(var.tags,{
+  tags = merge(var.tags, {
     "Name" = "nat-instance-main"
   })
 }
@@ -319,42 +356,42 @@ resource "aws_eip" "nat_instance_ip" {
 ################################################################################
 
 locals {
- endpoints = { for k, v in local.endpoint : k => v if var.create && try(v.create, true) }
+  endpoints = { for k, v in local.endpoint : k => v if var.create && try(v.create, true) }
 }
 
 data "aws_vpc_endpoint_service" "this" {
- for_each = local.endpoints
+  for_each = local.endpoints
 
- service      = lookup(each.value, "service", null)
- service_name = lookup(each.value, "service_name", null)
+  service      = lookup(each.value, "service", null)
+  service_name = lookup(each.value, "service_name", null)
 
- filter {
-   name   = "service-type"
-   values = [lookup(each.value, "service_type", "Gateway")]
- }
+  filter {
+    name   = "service-type"
+    values = [lookup(each.value, "service_type", "Gateway")]
+  }
 }
 
 resource "aws_vpc_endpoint" "this" {
- for_each = local.endpoints
+  for_each = local.endpoints
 
- vpc_id            = module.vpc.vpc_id
- service_name      = data.aws_vpc_endpoint_service.this[each.key].service_name
- vpc_endpoint_type = lookup(each.value, "service_type", "Gateway")
- auto_accept       = lookup(each.value, "auto_accept", null)
+  vpc_id            = module.vpc.vpc_id
+  service_name      = data.aws_vpc_endpoint_service.this[each.key].service_name
+  vpc_endpoint_type = lookup(each.value, "service_type", "Gateway")
+  auto_accept       = lookup(each.value, "auto_accept", null)
 
- security_group_ids  = lookup(each.value, "service_type", "Interface") == "Interface" ? length(distinct(concat(var.security_group_ids, lookup(each.value, "security_group_ids", [])))) > 0 ? distinct(concat(var.security_group_ids, lookup(each.value, "security_group_ids", []))) : null : null
- subnet_ids          = lookup(each.value, "service_type", "Interface") == "Interface" ? distinct(concat(var.subnet_ids, lookup(each.value, "subnet_ids", []))) : null
- route_table_ids     = lookup(each.value, "service_type", "Interface") == "Gateway" ? lookup(each.value, "route_table_ids", null) : null
- policy              = lookup(each.value, "policy", null)
- private_dns_enabled = lookup(each.value, "service_type", "Interface") == "Interface" ? lookup(each.value, "private_dns_enabled", null) : null
+  security_group_ids  = lookup(each.value, "service_type", "Interface") == "Interface" ? length(distinct(concat(var.security_group_ids, lookup(each.value, "security_group_ids", [])))) > 0 ? distinct(concat(var.security_group_ids, lookup(each.value, "security_group_ids", []))) : null : null
+  subnet_ids          = lookup(each.value, "service_type", "Interface") == "Interface" ? distinct(concat(var.subnet_ids, lookup(each.value, "subnet_ids", []))) : null
+  route_table_ids     = lookup(each.value, "service_type", "Interface") == "Gateway" ? lookup(each.value, "route_table_ids", null) : null
+  policy              = lookup(each.value, "policy", null)
+  private_dns_enabled = lookup(each.value, "service_type", "Interface") == "Interface" ? lookup(each.value, "private_dns_enabled", null) : null
 
- tags = merge(var.tags, lookup(each.value, "tags", {}))
+  tags = merge(var.tags, lookup(each.value, "tags", {}))
 
- timeouts {
-   create = lookup(var.timeouts, "create", "10m")
-   update = lookup(var.timeouts, "update", "10m")
-   delete = lookup(var.timeouts, "delete", "10m")
- }
+  timeouts {
+    create = lookup(var.timeouts, "create", "10m")
+    update = lookup(var.timeouts, "update", "10m")
+    delete = lookup(var.timeouts, "delete", "10m")
+  }
 }
 
 ################################################################################
@@ -362,17 +399,17 @@ resource "aws_vpc_endpoint" "this" {
 ################################################################################
 
 module "parameters" {
-  count                        = var.create_parameters ? 1 : 0
-  source                       = "truemark/network/aws//modules/parameters"
-  version                      = "~> 0.0"
-  name                         = module.vpc.name
-  vpc_id                       = coalesce(module.vpc.vpc_id,"force terraform to proceed without vpd id")
-  azs                          = module.vpc.azs
-  public_subnet_ids            = module.vpc.public_subnets
-  private_subnet_ids           = module.vpc.private_subnets
-  intra_subnet_ids             = module.vpc.intra_subnets
-  redshift_subnet_ids          = module.vpc.redshift_subnets
-  database_subnet_ids          = module.vpc.database_subnets
-  elasticache_subnet_ids       = module.vpc.elasticache_subnets
-  outpost_subnet_ids           = module.vpc.outpost_subnets
+  count                  = var.create_parameters ? 1 : 0
+  source                 = "truemark/network/aws//modules/parameters"
+  version                = "~> 0.0"
+  name                   = module.vpc.name
+  vpc_id                 = coalesce(module.vpc.vpc_id, "force terraform to proceed without vpd id")
+  azs                    = module.vpc.azs
+  public_subnet_ids      = module.vpc.public_subnets
+  private_subnet_ids     = module.vpc.private_subnets
+  intra_subnet_ids       = module.vpc.intra_subnets
+  redshift_subnet_ids    = module.vpc.redshift_subnets
+  database_subnet_ids    = module.vpc.database_subnets
+  elasticache_subnet_ids = module.vpc.elasticache_subnets
+  outpost_subnet_ids     = module.vpc.outpost_subnets
 }
